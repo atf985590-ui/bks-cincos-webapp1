@@ -1,0 +1,590 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // إخفاء شاشة التحميل بعد 3 ثواني
+    setTimeout(() => {
+        document.querySelector('.splash-screen').style.opacity = '0';
+        setTimeout(() => {
+            document.querySelector('.splash-screen').style.display = 'none';
+        }, 500);
+    }, 3000);
+
+    // تسجيل الدخول
+    const loginForm = document.getElementById('loginForm');
+    const loginContainer = document.querySelector('.login-container');
+    const mainContainer = document.querySelector('.main-container');
+    const welcomeModal = document.querySelector('.welcome-modal');
+    
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            loginContainer.style.display = 'none';
+            mainContainer.style.display = 'flex';
+            
+            // إنشاء المحتوى الديناميكي
+            createContentSections();
+            
+            // عرض رسالة الترحيب بعد تسجيل الدخول
+            setTimeout(() => {
+                welcomeModal.style.display = 'flex';
+            }, 500);
+        });
+    }
+    
+    // إغلاق رسالة الترحيب
+    const okBtn = document.querySelector('.ok-btn');
+    if (okBtn) {
+        okBtn.addEventListener('click', function() {
+            welcomeModal.style.display = 'none';
+        });
+    }
+    
+    // إدارة التنقل بين الأقسام
+    function setupNavigation() {
+        const navItems = document.querySelectorAll('.nav-item');
+        const contentSections = document.querySelectorAll('.content-section');
+        
+        navItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = this.getAttribute('data-target');
+                
+                // إزالة النشاط من جميع العناصر
+                navItems.forEach(navItem => navItem.classList.remove('active'));
+                contentSections.forEach(section => section.classList.remove('active'));
+                
+                // إضافة النشاط للعنصر الحالي
+                this.classList.add('active');
+                
+                // عرض القسم المحدد
+                document.getElementById(target).classList.add('active');
+            });
+        });
+    }
+    
+    // إنشاء محتوى الأقسام ديناميكيًا
+    function createContentSections() {
+        createHomeContent();
+        createVipContent();
+        createLeadersContent();
+        createTasksContent();
+        createProfileContent();
+        setupNavigation();
+        setupHomePageInteractions();
+    }
+    
+    function createHomeContent() {
+        const homeSection = document.createElement('div');
+        homeSection.id = 'home';
+        homeSection.className = 'content-section active';
+        homeSection.innerHTML = `
+            <div class="section-header">
+                <h2>الرئيسية</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card" id="balance-card">
+                    <i class="fas fa-wallet"></i>
+                    <h3>رصيدك</h3>
+                    <p>0.00 $</p>
+                </div>
+                <div class="stat-card" id="earnings-card">
+                    <i class="fas fa-coins"></i>
+                    <h3>أرباح اليوم</h3>
+                    <p>0.00 $</p>
+                </div>
+                <div class="stat-card" id="team-card">
+                    <i class="fas fa-users"></i>
+                    <h3>أعضاء فريقك</h3>
+                    <p>0</p>
+                </div>
+            </div>
+            <button class="invite-btn" id="invite-friends-btn">
+                <i class="fas fa-user-friends"></i> دعوة الأصدقاء
+            </button>
+            <div class="support-section">
+                <h3>خدمة العملاء</h3>
+                <a href="https://t.me/ta_ta_ta_123" target="_blank" class="support-telegram">
+                    <i class="fab fa-telegram"></i> انضم إلى قناتنا على Telegram
+                </a>
+            </div>
+        `;
+        document.querySelector('.main-content').appendChild(homeSection);
+    }
+    
+    function setupHomePageInteractions() {
+        // نافذة رصيدك
+        const balanceCard = document.getElementById('balance-card');
+        if (balanceCard) {
+            balanceCard.addEventListener('click', () => {
+                showNotification('رصيدك الحالي: 0.00$ - قم بالإيداع لزيادة رصيدك', 'info');
+            });
+        }
+        
+        // نافذة أرباح اليوم
+        const earningsCard = document.getElementById('earnings-card');
+        if (earningsCard) {
+            earningsCard.addEventListener('click', () => {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>أرباح اليوم</h2>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>يمكنك زيادة أرباحك اليومية من خلال:</p>
+                            <ul>
+                                <li>الاشتراك في إحدى خطط VIP</li>
+                                <li>إكمال المهام اليومية</li>
+                                <li>دعوة الأصدقاء</li>
+                                <li>مشاهدة الإعلانات</li>
+                            </ul>
+                            <button class="view-vip-plans">عرض خطط VIP</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+                
+                const closeBtn = modal.querySelector('.close-modal');
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                const viewVipBtn = modal.querySelector('.view-vip-plans');
+                viewVipBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    document.querySelector('.nav-item[data-target="vip"]').click();
+                });
+            });
+        }
+        
+        // نافذة أعضاء الفريق
+        const teamCard = document.getElementById('team-card');
+        if (teamCard) {
+            teamCard.addEventListener('click', () => {
+                const referralCode = generateReferralCode();
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>أعضاء فريقك</h2>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>كود الإحالة الخاص بك: <strong>${referralCode}</strong></p>
+                            <button class="copy-referral">نسخ الكود</button>
+                            <p class="vip-message">سيتاح لك دعوة الأصدقاء بعد الاشتراك في إحدى خطط VIP</p>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+                
+                const closeBtn = modal.querySelector('.close-modal');
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                const copyBtn = modal.querySelector('.copy-referral');
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard.writeText(referralCode);
+                    showNotification('تم نسخ كود الإحالة', 'success');
+                });
+            });
+        }
+        
+        // زر دعوة الأصدقاء
+        const inviteBtn = document.getElementById('invite-friends-btn');
+        if (inviteBtn) {
+            inviteBtn.addEventListener('click', () => {
+                const modal = document.createElement('div');
+                modal.className = 'modal';
+                modal.innerHTML = `
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2>دعوة الأصدقاء</h2>
+                            <button class="close-modal">&times;</button>
+                        </div>
+                        <div class="modal-body">
+                            <p>هذه الميزة متاحة فقط للأعضاء المشتركين في خطط VIP</p>
+                            <p>اشترك الآن للاستفادة من ميزة دعوة الأصدقاء والحصول على عمولة تصل إلى 26%</p>
+                            <button class="view-vip-plans">عرض خطط VIP</button>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.appendChild(modal);
+                modal.style.display = 'flex';
+                
+                const closeBtn = modal.querySelector('.close-modal');
+                closeBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                });
+                
+                const viewVipBtn = modal.querySelector('.view-vip-plans');
+                viewVipBtn.addEventListener('click', () => {
+                    modal.style.display = 'none';
+                    document.querySelector('.nav-item[data-target="vip"]').click();
+                });
+            });
+        }
+    }
+    
+    function createVipContent() {
+        const vipSection = document.createElement('div');
+        vipSection.id = 'vip';
+        vipSection.className = 'content-section';
+        vipSection.innerHTML = `
+            <div class="section-header">
+                <h2>خطط VIP</h2>
+                <p>اختر الخطة المناسبة لتبدأ رحلة أرباحك</p>
+            </div>
+            <div class="vip-scroll">
+                <div class="vip-plans">
+                    <!-- سيتم إضافة خطط VIP هنا -->
+                </div>
+            </div>
+        `;
+        document.querySelector('.main-content').appendChild(vipSection);
+        
+        // إضافة خطط VIP (20 خطة)
+        const vipPlansContainer = vipSection.querySelector('.vip-plans');
+        const vipPlans = [
+            { level: 1, price: 5, dailyProfit: '0.70$', friendProfit: '1.00$', taskBonus: '0.70$', loginBonus: '0.00$', featured: false, popular: false },
+            { level: 2, price: 8, dailyProfit: '0.90$', friendProfit: '1.10$', taskBonus: '0.90$', loginBonus: '1.00$', featured: false, popular: false },
+            { level: 3, price: 12, dailyProfit: '1.00$', friendProfit: '1.20$', taskBonus: '1.00$', loginBonus: '1.20$', featured: false, popular: false },
+            { level: 4, price: 18, dailyProfit: '4.00$', friendProfit: '4.00$', taskBonus: '5.00$', loginBonus: '2.00$', featured: true, popular: true },
+            { level: 5, price: 25, dailyProfit: '3.00$', friendProfit: '3.20$', taskBonus: '3.00$', loginBonus: '3.20$', featured: false, popular: false },
+            { level: 6, price: 33, dailyProfit: '4.00$', friendProfit: '4.20$', taskBonus: '4.00$', loginBonus: '4.20$', featured: false, popular: false },
+            { level: 7, price: 42, dailyProfit: '5.00$', friendProfit: '5.20$', taskBonus: '5.00$', loginBonus: '5.20$', featured: false, popular: false },
+            { level: 8, price: 52, dailyProfit: '6.00$', friendProfit: '6.20$', taskBonus: '6.00$', loginBonus: '6.20$', featured: false, popular: false },
+            { level: 9, price: 63, dailyProfit: '7.00$', friendProfit: '7.20$', taskBonus: '7.00$', loginBonus: '7.20$', featured: false, popular: false },
+            { level: 10, price: 75, dailyProfit: '8.00$', friendProfit: '8.20$', taskBonus: '8.00$', loginBonus: '8.20$', featured: false, popular: false },
+            { level: 11, price: 88, dailyProfit: '9.00$', friendProfit: '9.20$', taskBonus: '9.00$', loginBonus: '9.20$', featured: false, popular: false },
+            { level: 12, price: 102, dailyProfit: '10.00$', friendProfit: '10.20$', taskBonus: '10.00$', loginBonus: '10.20$', featured: false, popular: false },
+            { level: 13, price: 117, dailyProfit: '11.00$', friendProfit: '11.20$', taskBonus: '11.00$', loginBonus: '11.20$', featured: false, popular: false },
+            { level: 14, price: 133, dailyProfit: '12.00$', friendProfit: '12.20$', taskBonus: '12.00$', loginBonus: '12.20$', featured: false, popular: false },
+            { level: 15, price: 150, dailyProfit: '13.00$', friendProfit: '13.20$', taskBonus: '13.00$', loginBonus: '13.20$', featured: false, popular: false },
+            { level: 16, price: 168, dailyProfit: '14.00$', friendProfit: '14.20$', taskBonus: '14.00$', loginBonus: '14.20$', featured: false, popular: false },
+            { level: 17, price: 187, dailyProfit: '15.00$', friendProfit: '15.20$', taskBonus: '15.00$', loginBonus: '15.20$', featured: false, popular: false },
+            { level: 18, price: 207, dailyProfit: '16.00$', friendProfit: '16.20$', taskBonus: '16.00$', loginBonus: '16.20$', featured: false, popular: false },
+            { level: 19, price: 228, dailyProfit: '17.00$', friendProfit: '17.20$', taskBonus: '17.00$', loginBonus: '17.20$', featured: false, popular: false },
+            { level: 20, price: 250, dailyProfit: '18.00$', friendProfit: '18.20$', taskBonus: '18.00$', loginBonus: '18.20$', featured: false, popular: false }
+        ];
+        
+        vipPlans.forEach(plan => {
+            const planElement = document.createElement('div');
+            let planClass = 'vip-plan';
+            if (plan.featured) planClass += ' featured';
+            if (plan.popular) planClass += ' popular';
+            
+            planElement.className = planClass;
+            planElement.innerHTML = `
+                <div class="plan-header">
+                    <h3>VIP ${plan.level}</h3>
+                </div>
+                <div class="plan-details">
+                    <p>سعر الخطة: $${plan.price}</p>
+                    <p>الربح اليومي: ${plan.dailyProfit}</p>
+                    <p>ربح دعوة صديق: ${plan.friendProfit}</p>
+                    <p>مكافأة إكمال المهام: ${plan.taskBonus}</p>
+                    ${plan.loginBonus !== '0.00$' ? `<p>مكافأة تسجيل الدخول: ${plan.loginBonus}</p>` : ''}
+                </div>
+                <button class="subscribe-btn" data-plan="VIP ${plan.level}" data-price="${plan.price}">اشتراك الآن</button>
+            `;
+            vipPlansContainer.appendChild(planElement);
+        });
+    }
+    
+    function createLeadersContent() {
+        const leadersSection = document.createElement('div');
+        leadersSection.id = 'leaders';
+        leadersSection.className = 'content-section';
+        leadersSection.innerHTML = `
+            <div class="section-header">
+                <h2>لوحة المتصدرين</h2>
+                <p>أعلى الأرباح من مشاهدة الإعلانات وإكمال المهام والتسجيلات اليومية</p>
+            </div>
+            <div class="leaders-container">
+                <div class="leader-top">
+                    <div class="leader-card second">
+                        <div class="leader-rank">2</div>
+                        <div class="leader-avatar"><i class="fas fa-user"></i></div>
+                        <div class="leader-name">سارة أحمد</div>
+                        <div class="leader-id">#${Math.floor(1000000 + Math.random() * 9000000)}</div>
+                        <div class="leader-vip">VIP 4</div>
+                        <div class="leader-stats">
+                            <div class="leader-stat">
+                                <span class="leader-stat-value">245$</span>
+                                <span class="leader-stat-label">أرباح</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leader-card first">
+                        <div class="leader-rank">1</div>
+                        <div class="leader-avatar"><i class="fas fa-crown"></i></div>
+                        <div class="leader-name">محمد علي</div>
+                        <div class="leader-id">#${Math.floor(1000000 + Math.random() * 9000000)}</div>
+                        <div class="leader-vip">VIP 5</div>
+                        <div class="leader-stats">
+                            <div class="leader-stat">
+                                <span class="leader-stat-value">367$</span>
+                                <span class="leader-stat-label">أرباح</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="leader-card third">
+                        <div class="leader-rank">3</div>
+                        <div class="leader-avatar"><i class="fas fa-user"></i></div>
+                        <div class="leader-name">فاطمة حسن</div>
+                        <div class="leader-id">#${Math.floor(1000000 + Math.random() * 9000000)}</div>
+                        <div class="leader-vip">VIP 3</div>
+                        <div class="leader-stats">
+                            <div class="leader-stat">
+                                <span class="leader-stat-value">198$</span>
+                                <span class="leader-stat-label">أرباح</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="leaders-list">
+                    <h3>قائمة المتصدرين</h3>
+                    <!-- سيتم إضافة قائمة المتصدرين هنا -->
+                </div>
+            </div>
+        `;
+        document.querySelector('.main-content').appendChild(leadersSection);
+        
+        // إضافة قائمة المتصدرين
+        const leadersList = leadersSection.querySelector('.leaders-list');
+        for (let i = 4; i <= 20; i++) {
+            const leaderItem = document.createElement('div');
+            leaderItem.className = 'leader-item';
+            leaderItem.innerHTML = `
+                <div class="leader-item-rank">${i}</div>
+                <div class="leader-item-info">
+                    <div class="leader-item-name">${getRandomName()}</div>
+                    <div class="leader-item-id">#${Math.floor(1000000 + Math.random() * 9000000)}</div>
+                </div>
+                <div class="leader-item-vip">VIP ${Math.floor(1 + Math.random() * 5)}</div>
+                <div class="leader-item-amount">${Math.floor(50 + Math.random() * 200)}$</div>
+            `;
+            leadersList.appendChild(leaderItem);
+        }
+    }
+    
+    function createTasksContent() {
+        const tasksSection = document.createElement('div');
+        tasksSection.id = 'tasks';
+        tasksSection.className = 'content-section';
+        tasksSection.innerHTML = `
+            <div class="section-header">
+                <h2>المهام اليومية</h2>
+                <p>أكمل المهام واربح المزيد</p>
+            </div>
+            <div class="tasks-container">
+                <div class="task-card locked">
+                    <i class="fas fa-calendar-check"></i>
+                    <h3>التسجيل اليومي</h3>
+                    <p>سجل دخولك يوميًا لتحصل على مكافأة</p>
+                    <span class="lock-icon"><i class="fas fa-lock"></i></span>
+                    <div class="lock-message">
+                        <i class="fas fa-lock"></i> اشترك في خطة VIP first
+                    </div>
+                </div>
+                <div class="task-card locked">
+                    <i class="fas fa-ad"></i>
+                    <h3>مشاهدة الإعلانات</h3>
+                    <p>شاهد الإعلانات واربح المال</p>
+                    <span class="lock-icon"><i class="fas fa-lock"></i></span>
+                    <div class="lock-message">
+                        <i class="fas fa-lock"></i> اشترك في خطة VIP first
+                    </div>
+                </div>
+                <div class="task-card">
+                    <i class="fas fa-gamepad"></i>
+                    <h3>ألعاب تفاعلية</h3>
+                    <p>العب واربح المكافآت</p>
+                    <button class="play-btn">لعب</button>
+                </div>
+            </div>
+            <div class="support-section">
+                <h3>خدمة العملاء</h3>
+                <a href="https://t.me/ta_ta_ta_123" target="_blank" class="support-telegram">
+                    <i class="fab fa-telegram"></i> انضم إلى قناتنا على Telegram
+                </a>
+            </div>
+        `;
+        document.querySelector('.main-content').appendChild(tasksSection);
+    }
+    
+    function createProfileContent() {
+        const profileSection = document.createElement('div');
+        profileSection.id = 'profile';
+        profileSection.className = 'content-section';
+        profileSection.innerHTML = `
+            <div class="section-header">
+                <h2>حسابي</h2>
+            </div>
+            <div class="profile-info">
+                <div class="info-item">
+                    <span>اسم المستخدم:</span>
+                    <span>مستخدم جديد</span>
+                </div>
+                <div class="info-item">
+                    <span>البريد الإلكتروني:</span>
+                    <span>example@email.com</span>
+                </div>
+                <div class="info-item">
+                    <span>رقم ID:</span>
+                    <span>BKS-${Math.floor(1000 + Math.random() * 9000)}</span>
+                </div>
+                <div class="info-item">
+                    <span>تاريخ التسجيل:</span>
+                    <span>${new Date().toLocaleDateString('ar-EG')}</span>
+                </div>
+                <div class="info-item">
+                    <span>أرباحك:</span>
+                    <span>0.00 $</span>
+                </div>
+            </div>
+            <div class="profile-actions">
+                <button class="action-btn" id="withdrawalHistory"><i class="fas fa-history"></i> سجلات السحب</button>
+                <button class="action-btn" id="depositHistory"><i class="fas fa-coins"></i> سجلات الإيداع</button>
+                <button class="action-btn" id="settingsBtn"><i class="fas fa-cog"></i> الإعدادات</button>
+                <button class="action-btn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</button>
+            </div>
+            <div class="support-section">
+                <h3>خدمة العملاء</h3>
+                <a href="https://t.me/ta_ta_ta_123" target="_blank" class="support-telegram">
+                    <i class="fab fa-telegram"></i> انضم إلى قناتنا على Telegram
+                </a>
+            </div>
+        `;
+        document.querySelector('.main-content').appendChild(profileSection);
+        
+        // إعداد سجل السحوبات
+        document.getElementById('withdrawalHistory').addEventListener('click', function() {
+            showNotification('سجل السحوبات فارغ حالياً', 'info');
+        });
+        
+        // إعداد سجل الإيداعات
+        document.getElementById('depositHistory').addEventListener('click', function() {
+            showNotification('سجل الإيداعات فارغ حالياً', 'info');
+        });
+        
+        // إعداد الإعدادات
+        document.getElementById('settingsBtn').addEventListener('click', function() {
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2>الإعدادات</h2>
+                        <button class="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="settings-form">
+                            <div class="input-group">
+                                <label>اسم المستخدم:</label>
+                                <input type="text" value="مستخدم جديد">
+                            </div>
+                            <div class="input-group">
+                                <label>البريد الإلكتروني:</label>
+                                <input type="email" value="example@email.com">
+                            </div>
+                            <div class="input-group">
+                                <label>كلمة المرور الجديدة:</label>
+                                <input type="password" placeholder="أدخل كلمة المرور الجديدة">
+                            </div>
+                            <div class="input-group">
+                                <label>تأكيد كلمة المرور:</label>
+                                <input type="password" placeholder="أكد كلمة المرور الجديدة">
+                            </div>
+                            <button type="submit" class="save-settings">حفظ التغييرات</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.style.display = 'flex';
+            
+            const closeBtn = modal.querySelector('.close-modal');
+            closeBtn.addEventListener('click', () => {
+                modal.style.display = 'none';
+            });
+            
+            const form = modal.querySelector('.settings-form');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                showNotification('تم حفظ التغييرات بنجاح', 'success');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                }, 2000);
+            });
+        });
+    }
+    
+    // وظيفة مساعدة للحصول على أسماء عشوائية
+    function getRandomName() {
+        const names = [
+            "أحمد محمد", "محمد علي", "محمود حسن", "خالد إبراهيم", "عمر سعيد",
+            "سارة أحمد", "فاطمة محمد", "ريم خالد", "نورة عبدالله", "لينا علي",
+            "يوسف أحمد", "عبدالله سعد", "تركي ناصر", "بدر عبدالكريم", "سلطان فهد",
+            "أسماء عبدالرحمن", "شهد محمد", "الجوهرة ناصر", "روضة سعود", "وجدان علي"
+        ];
+        return names[Math.floor(Math.random() * names.length)];
+    }
+    
+    // إنشاء كود إحالة عشوائي
+    function generateReferralCode() {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 6; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
+    }
+    
+    // عرض الإشعارات
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type}`;
+        
+        let icon = 'fas fa-info-circle';
+        if (type === 'success') icon = 'fas fa-check-circle';
+        if (type === 'error') icon = 'fas fa-exclamation-circle';
+        
+        notification.innerHTML = `
+            <i class="${icon}"></i>
+            <span>${message}</span>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+    
+    // تحديث مبالغ السحب العشوائية
+    function updateRandomAmounts() {
+        const amounts = document.querySelectorAll('.amount');
+        amounts.forEach(amount => {
+            const randomAmount = Math.floor(Math.random() * 100) + 10;
+            amount.textContent = randomAmount;
+        });
+        
+        // تحديث أرقام الهوية كل 3 ثواني
+        const userIds = document.querySelectorAll('.user-id');
+        userIds.forEach(userId => {
+            userId.textContent = `ID: ${Math.floor(100000 + Math.random() * 900000)}`;
+        });
+    }
+    
+    setInterval(updateRandomAmounts, 3000);
+});
